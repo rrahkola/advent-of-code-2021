@@ -103,5 +103,7 @@ dist
 # TernJS port file
 .tern-port
 
+# input data
+input.txt
 # output data
 answer-*.txt
