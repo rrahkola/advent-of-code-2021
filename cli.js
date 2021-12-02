@@ -14,7 +14,7 @@ const cli = meow(
     Runs a piece of advent-of-code programming.
 
     Options            Default
-      --day            dec01                    Runs the code in the directory matching prefix
+      --day            <current_date>           Runs the code in the directory matching prefix
       --part           1                        Picks the path for the program (1 or 2)
       --input -i       example.txt              Relative filepath to be used as input
       --transform      array,integer            Transforms the input into data for the program (see below)
@@ -34,7 +34,7 @@ const cli = meow(
     flags: {
       day: {
         type: 'string',
-        default: 'dec01'
+        default: ''
       },
       part: {
         type: 'number',
@@ -65,6 +65,7 @@ const cli = meow(
   }
 )
 
+const now = new Date()
 const logger = pinoms({
   streams: [
     { level: 'trace', stream: cli.flags.debug ? process.stdout : devNull() },
@@ -75,14 +76,14 @@ logger.debug('Using debug mode')
 
 const config = {
   execute: {
-    prefix: cli.flags.day,
+    prefix: cli.flags.day || `dec${now.getDate().toString().padStart(2,'0')}`,
     input: cli.flags.input,
     output: (result) => `answer-${result}.txt`
   },
   transform: cli.flags.transform,
   program: {
     part: cli.flags.part,
-    showIntermediate: cli.flags.write
+    showIntermediate: cli.flags.debug || cli.flags.write
   }
 }
 
