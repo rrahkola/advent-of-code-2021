@@ -14,7 +14,11 @@ export default function * pickPart (input, config) {
   )
   const { part } = config
   assert(part <= 2, 'Valid parts are 1 or 2')
-  const data = part === 2 ? interpret(input) : input
+  const data = interpret(input)
   if (config.showIntermediate) yield data.join('\n')
-  for (const result of part1(data, config)) yield result
+  if (part === 2) {
+    for (const result of part1(data, config)) yield result
+  } else {
+    for (const result of part1(data, config)) yield result
+  }
 }
