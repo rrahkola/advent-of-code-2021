@@ -11,7 +11,7 @@ function * countIncreases (data, config) {
     return cur
   }, NaN)
   if (showIntermediate) yield increases.join('\n')
-  yield increases.length
+  yield `Number of increases: ${increases.length}`
 }
 
 function window (data) {
@@ -25,7 +25,7 @@ function window (data) {
 export default function * pickPart (data, config) {
   assert(
     Array.isArray(data) && data.length > 0 && Number.isInteger(data[0]),
-    'Must provide data as array of integers, use options "-t array -t integer"'
+    'Must provide data as array of integers, use options "-t lines -t integer"'
   )
   const { part } = config
   assert(part <= 2, 'Valid parts are 1 or 2')

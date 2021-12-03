@@ -13,7 +13,7 @@ function * joystickMovement (data, config) {
     breadth: totalForward
   }
   if (showIntermediate) yield inspect(result)
-  yield `Multiplied: ${result.breadth * result.depth}`
+  yield `Horizontal pos x depth: ${result.breadth * result.depth}`
 }
 
 function * aimMovement (data, config) {
@@ -35,7 +35,7 @@ function * aimMovement (data, config) {
   if (showIntermediate) yield inspect(movement)
   const result = total(movement)
   if (showIntermediate) yield inspect(result)
-  yield `Multiplied: ${result.breadth * result.depth}`
+  yield `Horizontal pos x depth: ${result.breadth * result.depth}`
 }
 
 function interpret (input) {
