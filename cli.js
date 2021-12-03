@@ -17,7 +17,7 @@ const cli = meow(
       --day            <current_date>           Runs the code in the directory matching prefix
       --part           1                        Picks the path for the program (1 or 2)
       --input -i       example.txt              Relative filepath to be used as input
-      --transform      array,integer            Transforms the input into data for the program (see below)
+      --transform      lines                    Transforms the input into data for the program (see below)
       --write -w                                When present, write out intermediate result files
       --debug                                   More verbose output
 
@@ -27,7 +27,7 @@ const cli = meow(
       If the order is unknown, just try the program w/o any options and check for errors.
       Usually, the program will be able to tell if the input data matches what is expected.
       The following transforms are available:
-        array          Split the text lines into an array of strings
+        lines          Split the text lines into an array of strings
         integer        Parse each line as an integer
 `,
   {
@@ -54,7 +54,7 @@ const cli = meow(
         type: 'string',
         alias: 't',
         isMultiple: true,
-        default: ['array', 'integer']
+        default: ['lines']
       },
       debug: {
         type: 'boolean',
@@ -108,7 +108,7 @@ export function transformInput (input, transforms) {
   let result = input || ''
   for (const transform of transforms) {
     // convert to array, removing empty lines
-    if (transform === 'array') result = result.split('\n').map(el => el.trim()).filter(Boolean)
+    if (transform === 'lines') result = result.split('\n').map(el => el.trim()).filter(Boolean)
     // convert to integers
     if (transform === 'integer') result = result.map(el => parseInt(el))
   }

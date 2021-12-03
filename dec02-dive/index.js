@@ -1,7 +1,7 @@
 import { strict as assert } from 'assert'
 import { inspect } from 'util'
 
-function * part1 (data, config) {
+function * joystickMovement (data, config) {
   const { showIntermediate } = config
   const direction = expected => ([dir]) => dir === expected
   const total = (arr) => arr.reduce((total, cur) => total + cur[1], 0)
@@ -12,11 +12,11 @@ function * part1 (data, config) {
     depth: totalDown - totalUp,
     breadth: totalForward
   }
-  yield inspect(result)
+  if (showIntermediate) yield inspect(result)
   yield `Multiplied: ${result.breadth * result.depth}`
 }
 
-function * part2 (data, config) {
+function * aimMovement (data, config) {
   const { showIntermediate } = config
   const total = (arr) => arr.reduce((obj, [breadth, depth]) => {
     obj.breadth = obj.breadth + breadth
@@ -32,9 +32,9 @@ function * part2 (data, config) {
     }
     return aim
   }, 0)
-  yield inspect(movement)
+  if (showIntermediate) yield inspect(movement)
   const result = total(movement)
-  yield inspect(result)
+  if (showIntermediate) yield inspect(result)
   yield `Multiplied: ${result.breadth * result.depth}`
 }
 
@@ -55,8 +55,8 @@ export default function * pickPart (input, config) {
   const data = interpret(input)
   if (config.showIntermediate) yield data.join('\n')
   if (part === 2) {
-    for (const result of part2(data, config)) yield result
+    for (const result of aimMovement(data, config)) yield result
   } else {
-    for (const result of part1(data, config)) yield result
+    for (const result of joystickMovement(data, config)) yield result
   }
 }
