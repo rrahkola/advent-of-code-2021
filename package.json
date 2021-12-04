@@ -31,6 +31,7 @@
   "dependencies": {
     "dev-null": "^0.1.1",
     "es-main": "^1.0.2",
+    "lodash": "^4.17.21",
     "meow": "^10.1.2",
     "pino-multi-stream": "^6.0.0"
   },

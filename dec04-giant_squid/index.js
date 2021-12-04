@@ -3,7 +3,7 @@ import { inspect } from 'util'
 
 const sum = arr => arr.reduce((acc, el) => acc + el, 0)
 
-function * bingoScore (data, config) {
+function * winningBingo (data, config) {
   const { showIntermediate } = config
   const { balls, boards } = data
   const games = boards.map(createGameBoard)
@@ -16,8 +16,32 @@ function * bingoScore (data, config) {
       playBingoBall(nextBall, game)
       if (showIntermediate) yield `ball: ${nextBall}\ngame: ${inspect(game)}`
       if (checkWinner(game)) {
-        yield `Winning Score: ${winningScore(nextBall, game)}`
+        yield `Winning Score: ${bingoScore(nextBall, game)}`
         return
+      }
+    }
+  }
+}
+
+function * losingBingo (data, config) {
+  const { showIntermediate } = config
+  const { balls, boards } = data
+  const games = boards.map(createGameBoard)
+  for (const game of games) {
+    if (showIntermediate) yield inspect(game)
+  }
+  let winners = []
+  while (true) {
+    const nextBall = balls.shift()
+    for (const game of games) {
+      playBingoBall(nextBall, game)
+      if (showIntermediate) yield `ball: ${nextBall}\ngame: ${inspect(game)}`
+      if (checkWinner(game)) {
+        winners = [...new Set([...winners, game.idx])]
+        if (winners.length >= games.length) {
+          yield `Losing score: ${bingoScore(nextBall, game)}`
+          return
+        }
       }
     }
   }
@@ -46,7 +70,7 @@ function checkWinner (game) {
   return (game.combos.find(isWinner)) ? true : false
 }
 
-function winningScore (nextBall, game) {
+function bingoScore (nextBall, game) {
   return nextBall * sum(game.values)
 }
 
@@ -101,8 +125,8 @@ export default function * pickPart (input, config) {
   const data = interpret(input)
   if (config.showIntermediate) yield inspect(data)
   if (part === 2) {
-    for (const result of bingoScore(data, config)) yield result
+    for (const result of losingBingo(data, config)) yield result
   } else {
-    for (const result of bingoScore(data, config)) yield result
+    for (const result of winningBingo(data, config)) yield result
   }
 }
