@@ -27,6 +27,7 @@ const cli = meow(
       If the order is unknown, just try the program w/o any options and check for errors.
       Usually, the program will be able to tell if the input data matches what is expected.
       The following transforms are available:
+        raw            Perform no transforms at all
         lines          Split the text lines into an array of strings
         integer        Parse each line as an integer
 `,
@@ -111,6 +112,8 @@ export function transformInput (input, transforms) {
     if (transform === 'lines') result = result.split('\n').map(el => el.trim()).filter(Boolean)
     // convert to integers
     if (transform === 'integer') result = result.map(el => parseInt(el))
+    // leave as raw data
+    if (transform === 'raw') result = result
   }
   return result
 }
