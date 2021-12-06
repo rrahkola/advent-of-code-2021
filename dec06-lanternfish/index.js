@@ -24,7 +24,7 @@ function * lanternfishLongevity (data, config) {
 }
 
 function growLanternfish(ages) {
-  assert(ages.length = 9, '0-8 days must all be represented')
+  assert(ages.length === 9, '0-8 days must all be represented')
   const hatching = ages.shift()
   ages.push(hatching)
   ages[6] = ages[6] + hatching
