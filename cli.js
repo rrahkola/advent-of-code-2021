@@ -9,7 +9,7 @@ import pinoms from 'pino-multi-stream'
 const cli = meow(
   `
     Usage
-      $ node ./cli.js -t array -t integer --day dec01 -i input.txt
+      $ npx aoc-2021 -t lines -t integer --day dec01 -i input.txt
 
     Runs a piece of advent-of-code programming.
 
@@ -18,7 +18,7 @@ const cli = meow(
       --part           1                        Picks the path for the program (1 or 2)
       --input -i       example.txt              Relative filepath to be used as input
       --transform      lines                    Transforms the input into data for the program (see below)
-      --write -w                                When present, write out intermediate result files
+      --verbose -v                              When present, write out intermediate result files
       --debug                                   More verbose output
 
     Transforms
@@ -46,9 +46,9 @@ const cli = meow(
         alias: 'i',
         default: 'example.txt'
       },
-      write: {
+      verbose: {
         type: 'boolean',
-        alias: 'w',
+        alias: 'v',
         default: false
       },
       transform: {
@@ -84,7 +84,7 @@ const config = {
   transform: cli.flags.transform,
   program: {
     part: cli.flags.part,
-    showIntermediate: cli.flags.debug || cli.flags.write
+    showIntermediate: cli.flags.debug || cli.flags.verbose
   }
 }
 
