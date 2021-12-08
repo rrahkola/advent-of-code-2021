@@ -12,11 +12,14 @@ function * crabFuel (data, config) {
   )
   const totalCost = {}
   for (const goal of attempts) {
-    const cost = data.positions.map(pos => Math.abs(pos - goal))
+    const cost = data.positions.map(config.fuelCost(goal))
     totalCost[goal] = sum(cost)
-    if (showIntermediate) yield inspect({ goal, cost, totalCost })
   }
-  yield `Calculated fuel: ${inspect(totalCost)}`
+  if (showIntermediate) yield inspect({ attempts, totalCost })
+  const lowestCost = Object.entries(totalCost).reduce((min, cost) => {
+    return (min[1] < cost[1]) ? min : cost
+  }, [null, +Infinity])
+  yield `Minimum fuel: ${lowestCost[1]} (at pos ${lowestCost[0]})`
 }
 
 function characterize (positions) {
@@ -65,8 +68,13 @@ export default function * pickPart (input, config) {
   const data = interpret(input)
   if (config.showIntermediate) yield inspect(data)
   if (part === 2) {
+    config.fuelCost = goal => pos => {
+      const distance = Math.abs(pos - goal)
+      return (distance * distance + distance) / 2   // n (n + 1) / 2 === 1 + 2 + ... + n
+    }
     for (const result of crabFuel(data, config)) yield result
   } else {
+    config.fuelCost = goal => pos => Math.abs(pos - goal)
     for (const result of crabFuel(data, config)) yield result
   }
 }
