@@ -1,4 +1,19 @@
 import isEqual from 'lodash/isEqual.js'
+
+const normalizeDigitStr = digitStr =>
+  digitStr
+    .trim()
+    .split('')
+    .sort()
+    .join('')
+
+const translateDigitStr = mapping => digitStr =>
+  digitStr
+    .split('')
+    .map(char => 'abcdefg'[mapping.indexOf(char)])
+    .sort()
+    .join('')
+
 export default class SevenSegment {
   static allMappings = []
 
@@ -9,6 +24,7 @@ export default class SevenSegment {
       permutation(SevenSegment.allMappings, 'abcdefg'.split(''), 7)
   }
 
+  // NOTE: frequency count: { a: 8, b: 6, c: 8, d: 7, e: 4, f: 9, g: 7 }
   static properSegments = [
     'abcefg', // '0'
     'cf', // '1'
@@ -23,47 +39,87 @@ export default class SevenSegment {
   ]
 
   static parseLine (line) {
-    const normalizeDigitStr = digitStr =>
-      digitStr
-        .trim()
-        .split('')
-        .sort()
-        .join('')
     const [trainingStr, readoutStr] = line.split('|')
     const training = trainingStr
       .split(/\s+/)
       .filter((el = '') => Boolean(el.trim()))
-      .map(normalizeDigitStr)
-      .sort((el1, el2) => el1.length - el2.length)
+      // .map(normalizeDigitStr)
+      .sort((el1, el2) => el1.length - el2.length || el1.localeCompare(el2))
     const readout = readoutStr
       .split(/\s+/)
       .filter((el = '') => Boolean(el.trim()))
-      .map(normalizeDigitStr)
+      // .map(normalizeDigitStr)
     return new SevenSegment({ training, readout })
   }
 
   train () {
     if (this.trained) return
     this.mapSegments = () => 'cf'
+    // this.trainByBruteForce()
+    this.trainByAnalytics()
+    this.trained = true
+  }
+
+  trainByAnalytics () {
+    const { training } = this
+    const mapping = []
+    const frequencies = Object.entries(
+      'abcdefg'.split('').reduce(
+        (obj, key) => ({
+          ...obj,
+          [key]: training
+            .flatMap(str => str.split(''))
+            .filter(char => char === key).length
+        }),
+        {}
+      )
+    )
+    const notIn = (large, small) =>
+      large.filter(char => small.indexOf(char) === -1)
+    const four = training.find(str => str.length === 4).split('')
+    const seven = training.find(str => str.length === 3).split('')
+    const one = training.find(str => str.length === 2).split('')
+    const bd = notIn(four, one) // ['b','d']
+    mapping[0] = notIn(seven, one)[0] // 'a'
+    mapping[1] = frequencies.find(([key, count]) => count === 6)[0] // 'b'
+    mapping[2] = frequencies.find(
+      ([key, count]) => count === 8 && key != mapping[0]
+    )[0] // 'c'
+    mapping[3] = frequencies.find(
+      ([key, count]) => count === 7 && bd.includes(key)
+    )[0] // 'd'
+    mapping[4] = frequencies.find(([key, count]) => count === 4)[0] // 'e'
+    mapping[5] = frequencies.find(([key, count]) => count === 9)[0] // 'f'
+    mapping[6] = frequencies.find(
+      ([key, count]) => count === 7 && key != mapping[3]
+    )[0] // 'g'
+    this.mapSegments = translateDigitStr(mapping.join(''))
+  }
+
+  trainByBruteForce () {
     const { training } = this
     const sortedProperSegments = [...SevenSegment.properSegments].sort()
+    // brute force method-- it might be faster to attack directly
     for (const mapping of SevenSegment.allMappings) {
-      const mapSegments = segs => segs.split('').map(char => mapping['abcdefg'.indexOf(char)]).sort().join('')
+      const mapSegments = translateDigitStr(mapping)
       const converted = training.map(mapSegments).sort()
       if (isEqual(converted, sortedProperSegments)) {
         this.mapSegments = mapSegments
         break
       }
     }
-    this.trained = true
   }
 
   convertReadout () {
     this.train()
-    const { readout, mapSegments } = this
-    const display = readout
-      .map(mapSegments)
-      .map(segments => SevenSegment.properSegments.indexOf(segments))
+    const display = []
+    for (const digitStr of this.readout) {
+      const translatedStr = this.mapSegments(digitStr)
+      const digit = SevenSegment.properSegments.indexOf(translatedStr)
+      // console.log({ digitStr, translatedStr, digit }, 'found digit')
+      display.push(digit)
+    }
+    // console.log(`Reading display: ${display.join('')}`)
     return parseInt(display.join(''))
   }
 }

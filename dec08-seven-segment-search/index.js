@@ -18,14 +18,10 @@ function * countReadoutAppearancesByLength (data, config) {
 
 function * sumConvertedReadouts (data, config) {
   const { showIntermediate } = config
-  yield inspect(SevenSegment.allMappings)
-  const readouts = data.reduce(
-    (obj, segment) => ({
-      ...obj,
-      [segment.readout.join(' ')]: segment.convertReadout()
-    }),
-    {}
-  )
+  const readouts = {}
+  for (const segment of data) {
+    readouts[segment.readout.join(' ')] = segment.convertReadout()
+  }
   if (showIntermediate) yield inspect({ readouts })
   yield `Sum of converted readouts: ${sum(Object.values(readouts))}`
 }
