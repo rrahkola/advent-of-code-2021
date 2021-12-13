@@ -23,7 +23,7 @@ function * crabFuel (data, config) {
 }
 
 function characterize (positions) {
-  const centerIdx = Math.floor(positions.length / 2) - 1
+  const centerIdx = Math.floor(positions.length / 2 - .5)
   const sorted = sortBy(positions)
   const mean = Math.round(sum(positions) / positions.length)
   const median = sorted[centerIdx]

@@ -1,6 +1,7 @@
 import { strict as assert } from 'assert'
 import { inspect } from 'util'
-import Chunk from './chunk.js'
+import sortBy from 'lodash/sortBy.js'
+
 
 const CLOSERS = {
   '(': ')',
@@ -9,16 +10,23 @@ const CLOSERS = {
   '<': '>'
 }
 
-const SCORES = {
+const SYNTAX_SCORES = {
   ')': 3,
   ']': 57,
   '}': 1197,
   '>': 25137
 }
 
-function * part1 (data, config) {
+const AUTOCOMPLETE_SCORES = {
+  ')': 1,
+  ']': 2,
+  '}': 3,
+  '>': 4
+}
+
+
+function * syntaxScore (data, config) {
   const { showIntermediate } = config
-  if (showIntermediate) yield inspect(data.transformed)
   const corrupted = []
   for (const line of data.transformed) {
     const match = line.match(/(\)|\]|\}|\>)/)
@@ -26,11 +34,37 @@ function * part1 (data, config) {
   }
   if (showIntermediate) yield inspect(corrupted)
   const syntaxScore = corrupted
-    .map(match => SCORES[match[0]])
+    .map(match => SYNTAX_SCORES[match[0]])
     .reduce((sum, el) => sum + el, 0)
   yield `Syntax Score: ${syntaxScore}`
 }
 
+function * autocompleteScore (data, config) {
+  const { showIntermediate } = config
+  const incomplete = []
+  for (const line of data.transformed) {
+    const match = line.match(/(\)|\]|\}|\>)/)
+    if (!match) incomplete.push(line)
+  }
+  if (showIntermediate) yield inspect(incomplete)
+  const autocompleteScores = incomplete
+    .map(line => autocomplete(line))
+    .map(autocompletion => score(autocompletion))
+  if (showIntermediate) yield inspect(autocompleteScores)
+  const medianIdx = Math.floor(autocompleteScores.length / 2)
+  yield `Autocomplete Score: ${sortBy(autocompleteScores)[medianIdx]}`
+}
+
+function autocomplete (line) {
+  return line
+    .split('')
+    .reverse()
+    .map(char => CLOSERS[char])
+}
+
+function score (autocompletion) {
+  return autocompletion.reduce((score, char) => score * 5 + AUTOCOMPLETE_SCORES[char], 0)
+}
 
 function removePairs (str = '') {
   const pairsRegex = /(\(\)|\[\]|\{\}|\<\>)/g
@@ -61,8 +95,8 @@ export default function * pickPart (input, config) {
   const data = interpret(input)
   if (config.showIntermediate) yield inspect(data)
   if (part === 2) {
-    for (const result of part1(data, config)) yield result
+    for (const result of autocompleteScore(data, config)) yield result
   } else {
-    for (const result of part1(data, config)) yield result
+    for (const result of syntaxScore(data, config)) yield result
   }
 }
