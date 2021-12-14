@@ -1,5 +1,8 @@
 import { strict as assert } from 'assert'
 import { inspect } from 'util'
+import sortBy from 'lodash/sortBy.js'
+
+const isLower = (str = '') => str === str.toLowerCase()
 
 class Cave {
   constructor (name, links = []) {
@@ -24,7 +27,7 @@ function * visitSmallCavesAtMostOnce (data, config) {
   const routes = paths
     .filter(path => path.slice(-1)[0].name === 'end')
     .map(path => path.map(el => el.name).join(','))
-  if (showIntermediate) yield inspect(routes)
+  if (showIntermediate) yield inspect(sortBy(routes))
   yield `Number of paths: ${routes.length}`
 }
 
@@ -33,18 +36,41 @@ function exploreSmallCavesOnce (cave, path = []) {
   const caveVisits = path.map(el => el.name)
   if (cave.name === 'end') return [[...path, cave]]
   for (const next of cave.explore()) {
-    if (cave.name === cave.name.toLowerCase() && caveVisits.includes(cave.name)) return []
+    if (isLower(cave.name) && caveVisits.includes(cave.name)) return []
     paths.push(...exploreSmallCavesOnce(next, [...path, cave]))
   }
   return paths
+}
+
+function exploreSmallCavesAtMostTwice (cave, path = []) {
+  const paths = []
+  const caveVisits = path.map(el => el.name)
+  if (cave.name === 'end') return [[...path, cave]]
+  for (const next of cave.explore()) {
+    if (allowPassage(cave, caveVisits)) {
+      paths.push(...exploreSmallCavesAtMostTwice(next, [...path, cave]))
+    } else return []
+  }
+  return paths
+}
+
+function allowPassage (cave, caveVisits = []) {
+  const visitedTwice = caveVisits.some(
+    (name, _, arr) =>
+      isLower(name) && arr.filter(check => check === name).length > 1
+  )
+  if (cave.name === 'start' && caveVisits.includes(cave.name)) return false
+  if (isLower(cave.name) && caveVisits.includes(cave.name) && visitedTwice)
+    return false
+  return true
 }
 
 function interpret (input) {
   const caves = {}
   for (const link of input) {
     const [name1, name2] = link.split('-')
-    const cave1 = (caves[name1]) ? caves[name1] : new Cave(name1)
-    const cave2 = (caves[name2]) ? caves[name2] : new Cave(name2)
+    const cave1 = caves[name1] ? caves[name1] : new Cave(name1)
+    const cave2 = caves[name2] ? caves[name2] : new Cave(name2)
     cave1.link(cave2)
     cave2.link(cave1)
     caves[name1] = cave1
@@ -65,6 +91,7 @@ export default function * pickPart (input, config) {
   const data = interpret(input)
   if (config.showIntermediate) yield inspect(data)
   if (part === 2) {
+    config.explore = exploreSmallCavesAtMostTwice
     for (const result of visitSmallCavesAtMostOnce(data, config)) yield result
   } else {
     config.explore = exploreSmallCavesOnce
