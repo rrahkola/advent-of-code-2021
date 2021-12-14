@@ -11,12 +11,14 @@ function * visibleDots (data, config) {
   for (const step in range(config.numFolds)) {
     result = transform(coords, width, breadth, folds[step])
     coords = uniq(result)
+    width = Math.max(...coords.map(el => el.colIdx))
+    breadth = Math.max(...coords.map(el => el.rowIdx))
     visible = coords.length
     if (showIntermediate) {
-      yield inspect({ step, visible })
-      yield plotCoords(coords)
+      yield inspect({ step, visible, width, breadth, coords })
     }
   }
+  yield plotCoords(coords)
   yield `Number of visible dots: ${visible}`
 }
 
@@ -29,13 +31,17 @@ function transform (coords, width, breadth, instruction) {
 }
 
 const foldAtRow = (breadth, line) => prev => {
+  const shift = Math.max(0, breadth - line * 2)
+  const flip = Math.max(breadth, line * 2)
   const colIdx = prev.colIdx
-  const rowIdx = prev.rowIdx < line ? prev.rowIdx : breadth - prev.rowIdx
+  const rowIdx = prev.rowIdx < line ? prev.rowIdx + shift : flip - prev.rowIdx
   return { colIdx, rowIdx }
 }
 
 const foldAtCol = (width, line) => prev => {
-  const colIdx = prev.colIdx < line ? prev.colIdx : width - prev.colIdx
+  const shift = Math.max(0, width - line * 2)
+  const flip = Math.max(width, line * 2)
+  const colIdx = prev.colIdx < line ? prev.colIdx + shift : flip - prev.colIdx
   const rowIdx = prev.rowIdx
   return { colIdx, rowIdx }
 }
@@ -83,6 +89,7 @@ export default function * pickPart (input, config) {
   const data = interpret(input)
   if (config.showIntermediate) yield inspect(data)
   if (part === 2) {
+    config.numFolds = data.folds.length
     for (const result of visibleDots(data, config)) yield result
   } else {
     config.numFolds = 1
