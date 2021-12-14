@@ -81,8 +81,8 @@ function interpret (input) {
 
 export default function * pickPart (input, config) {
   assert(
-    !Array.isArray(input),
-    'Must provide data as raw string, use options "-t raw"'
+    typeof input === 'string' || input instanceof String,
+    'Must provide data as a string, use options "-t raw"'
   )
   const { part } = config
   assert(part <= 2, 'Valid parts are 1 or 2')
