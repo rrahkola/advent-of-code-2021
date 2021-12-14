@@ -1,12 +1,59 @@
 import { strict as assert } from 'assert'
 import { inspect } from 'util'
 
-function * part1 (data, config) {
-  const { showIntermediate } = config
-  yield 'Howdy'
+class Cave {
+  constructor (name, links = []) {
+    this.name = name
+    this.links = links
+  }
+
+  link (newLink) {
+    const { name, links: existing } = this
+    const currentLinks = [name].concat(existing.map(el => el.name))
+    if (!currentLinks.includes(newLink.name)) existing.push(newLink)
+  }
+
+  explore (path) {
+    return this.links
+  }
 }
 
-function interpret (input) { return input }
+function * visitSmallCavesAtMostOnce (data, config) {
+  const { showIntermediate } = config
+  const paths = config.explore(data.start)
+  const routes = paths
+    .filter(path => path.slice(-1)[0].name === 'end')
+    .map(path => path.map(el => el.name).join(','))
+  if (showIntermediate) yield inspect(routes)
+  yield `Number of paths: ${routes.length}`
+}
+
+function exploreSmallCavesOnce (cave, path = []) {
+  const paths = []
+  const caveVisits = path.map(el => el.name)
+  if (cave.name === 'end') return [[...path, cave]]
+  for (const next of cave.explore()) {
+    if (cave.name === cave.name.toLowerCase() && caveVisits.includes(cave.name)) return []
+    paths.push(...exploreSmallCavesOnce(next, [...path, cave]))
+  }
+  return paths
+}
+
+function interpret (input) {
+  const caves = {}
+  for (const link of input) {
+    const [name1, name2] = link.split('-')
+    const cave1 = (caves[name1]) ? caves[name1] : new Cave(name1)
+    const cave2 = (caves[name2]) ? caves[name2] : new Cave(name2)
+    cave1.link(cave2)
+    cave2.link(cave1)
+    caves[name1] = cave1
+    caves[name2] = cave2
+  }
+  assert(Boolean(caves.start), 'start cave is not defined')
+  assert(Boolean(caves.end, 'end cave is not defined'))
+  return caves
+}
 
 export default function * pickPart (input, config) {
   assert(
@@ -18,8 +65,9 @@ export default function * pickPart (input, config) {
   const data = interpret(input)
   if (config.showIntermediate) yield inspect(data)
   if (part === 2) {
-    for (const result of part1(data, config)) yield result
+    for (const result of visitSmallCavesAtMostOnce(data, config)) yield result
   } else {
-    for (const result of part1(data, config)) yield result
+    config.explore = exploreSmallCavesOnce
+    for (const result of visitSmallCavesAtMostOnce(data, config)) yield result
   }
 }

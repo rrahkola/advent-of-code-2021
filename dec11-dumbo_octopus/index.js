@@ -41,8 +41,7 @@ function * countFlashes (data, config) {
   let flashCount = 0
   for (const step of range(1, config.steps + 1)) {
     data.flat.forEach(octopus => octopus.tickEnergy())
-    const flashStep = data.flat.filter(octopus => octopus.flashed).length
-    flashCount += flashStep
+    flashCount +=  data.flat.filter(octopus => octopus.flashed).length
     data.flat.forEach(octopus => octopus.finishStep())
     const energyGrid = genEnergyGrid(data.grid)
     if (showIntermediate && step % 10 === 0) yield inspect({ step, flashCount, energyGrid })
