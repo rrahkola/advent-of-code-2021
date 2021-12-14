@@ -9,5 +9,5 @@ npm i
 # create a local executable
 npm link
 # run it!
-npx aoc-2021 --day dec01 --part 2
+npx aoc-2021 --day dec01 -t lines -t integer --part 2
 ```
