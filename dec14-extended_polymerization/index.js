@@ -2,6 +2,7 @@ import { strict as assert } from 'assert'
 import { inspect } from 'util'
 import range from 'lodash/range.js'
 import uniq from 'lodash/uniq.js'
+import sum from 'lodash/sum.js'
 
 function * polymerScore (data, config) {
   const { showIntermediate } = config
@@ -25,7 +26,7 @@ function * polymerScore (data, config) {
 
 function insertion (data) {
   const { template, mapping } = data
-  const insert = pair => mapping[pair]
+  const insert = pair => mapping[pair][0]
   const result = template
     .slice(0, -1)
     .split('')
@@ -52,9 +53,60 @@ function diffMaxMin (frequencies) {
   )
 }
 
+function * quickPolymerScore (data, config) {
+  const { showIntermediate } = config
+  const { pairs, ends, chars, mapping } = data
+  let pairFrequencies = pairCount(pairs, ends)
+  let frequencies = {}
+  for (const step of range(config.steps + 1)) {
+    frequencies = countCharsFromPairs(chars, pairFrequencies)
+    if (showIntermediate) yield inspect({ step, pairFrequencies, frequencies })
+    pairFrequencies = insertPairs(pairFrequencies, mapping)
+  }
+  const score = diffMaxMin(frequencies)
+  yield `Polymer Score: ${score}`
+}
+
+function pairCount (pairs, ends = []) {
+  const count = Object.fromEntries(ends.map(end => [end, 1]))
+  for (const pair of uniq(pairs)) {
+    count[pair] = pairs.filter(el => el === pair).length
+  }
+  return count
+}
+
+function countCharsFromPairs (chars, pairFrequencies) {
+  const charCounts = {}
+  const pairs = Object.keys(pairFrequencies)
+  for (const char of chars) {
+    const matches = pairs
+      .filter(pair => pair.includes(char))
+      .concat([`${char}${char}`])
+    charCounts[char] =
+      sum(matches.map(match => pairFrequencies[match] || 0)) / 2
+  }
+  return charCounts
+}
+
+// given a set of pair frequencies, applies mapping to yield a new set of pair frequencies
+function insertPairs (pairFrequencies, mapping) {
+  const result = {}
+  for (const [pair, count] of Object.entries(pairFrequencies)) {
+    const [first, second] = mapping[pair] || [pair]
+    result[first] = result[first] ? result[first] + count : count
+    if (second) result[second] = result[second] ? result[second] + count : count
+  }
+  return result
+}
+
 function interpret (input) {
   const [template, ruleStr] = input.split('\n\n')
   const chars = uniq(input.match(/[A-Z]/g))
+  const ends = [template[0], ...template.slice(-1)]
+  const pairs = template
+    .slice(0, -1)
+    .split('')
+    .map((char, idx) => `${char}${template[idx + 1]}`)
   const rules = ruleStr
     .split('\n')
     .filter(el => Boolean(el))
@@ -63,9 +115,12 @@ function interpret (input) {
       return { pair, insertion }
     })
   const mapping = Object.fromEntries(
-    rules.map(({ pair, insertion }) => [pair, `${pair[0]}${insertion}`])
+    rules.map(({ pair, insertion }) => [
+      pair,
+      [`${pair[0]}${insertion}`, `${insertion}${pair[1]}`]
+    ])
   )
-  return { template, rules, mapping, chars }
+  return { template, pairs, ends, rules, mapping, chars }
 }
 
 export default function * pickPart (input, config) {
@@ -78,7 +133,8 @@ export default function * pickPart (input, config) {
   const data = interpret(input)
   if (config.showIntermediate) yield inspect(data)
   if (part === 2) {
-    for (const result of polymerScore(data, config)) yield result
+    config.steps = 40
+    for (const result of quickPolymerScore(data, config)) yield result
   } else {
     config.steps = 10
     for (const result of polymerScore(data, config)) yield result
