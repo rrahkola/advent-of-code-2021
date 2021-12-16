@@ -42,7 +42,6 @@ function frequencyCount (chars, template) {
   const frequencies = Object.fromEntries(
     chars.map(char => [char, occurrences(char)])
   )
-  console.log(frequencies)
   return frequencies
 }
 
