@@ -1,6 +1,6 @@
 import { strict as assert } from 'assert'
 import { inspect } from 'util'
-import setupGrid from '../utils/setupGrid.js'
+import setupGrid from '../utils/gridUtilities.js'
 import sum from 'lodash/sum.js'
 
 function * part1 (data, config) {
@@ -9,7 +9,8 @@ function * part1 (data, config) {
   yield 'Howdy'
 }
 
-function findPath
+function findPath () {
+}
 
 function minimumPerimeterRisk (grid) {
   const width = grid[0].length - 1
